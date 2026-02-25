@@ -2,8 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kev.codex | GitHub Deployer Pro</title>
+    <title>Nexu | GitHub Content Deployer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
@@ -14,26 +13,206 @@
             --gh-success: #1f883d;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: #ffffff; margin: 0; color: #1f2328;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background-color: #ffffff; margin: 0; }
 
-        /* BANNER REPLICA DARI aiAzUW.jpg */
+        /* BANNER REPLICA */
         .banner {
             background: #1b4b82 linear-gradient(135deg, #1b4b82 0%, #2b6cb0 100%);
-            color: white; padding: 50px 20px; text-align: center; position: relative; overflow: hidden;
+            color: white; padding: 40px 20px; text-align: center; position: relative; overflow: hidden;
         }
-
-        .banner::before, .banner::after {
-            content: ""; position: absolute; background: rgba(255, 255, 255, 0.08); border-radius: 50%;
-        }
-        .banner::before { width: 250px; height: 250px; top: -100px; left: -50px; }
-        .banner::after { width: 150px; height: 150px; bottom: -30px; right: 10%; }
 
         .banner-icon {
-            background: white; width: 70px; height: 70px; border-radius: 12px;
+            background: white; width: 60px; height: 60px; border-radius: 12px;
             display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;
+            position: relative; z-index: 2;
+        }
+        .banner-icon svg { fill: #1b4b82; width: 35px; }
+
+        .container { max-width: 800px; margin: -30px auto 50px; padding: 0 20px; position: relative; z-index: 5; }
+
+        .box {
+            background: white; border: 1px solid var(--gh-border);
+            border-radius: 6px; box-shadow: 0 8px 24px rgba(149,157,165,0.2);
+        }
+
+        .box-header {
+            background: var(--gh-bg); padding: 16px; border-bottom: 1px solid var(--gh-border);
+            font-weight: 600; border-radius: 6px 6px 0 0;
+        }
+
+        .box-body { padding: 20px; }
+
+        .guide {
+            background-color: #ddf4ff; border: 1px solid #54aeff66;
+            border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #0969da;
+        }
+
+        input, select {
+            width: 100%; padding: 10px; border: 1px solid var(--gh-border);
+            border-radius: 6px; box-sizing: border-box; margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);
+            cursor: pointer; width: 100%; transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--gh-success); color: white; }
+        .btn-danger { color: var(--gh-danger); background: var(--gh-bg); border: 1px solid var(--gh-border); }
+
+        #log {
+            background: #0d1117; color: #7ee787; padding: 15px; border-radius: 6px;
+            font-family: monospace; font-size: 12px; margin-top: 20px;
+            height: 200px; overflow-y: auto; display: none; border: 1px solid #30363d;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="banner">
+    <div class="banner-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.165 6.839 9.49.5.09.682-.218.682-.485 0-.24-.009-.875-.013-1.716-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.011 10.011 0 0022 12c0-5.523-4.477-10-10-10z"></path></svg>
+    </div>
+    <h1 style="margin:0">GitHub Deployer</h1>
+    <p style="margin:5px 0 0; opacity: 0.8;">Upload isi ZIP langsung ke repository kamu.</p>
+</div>
+
+<div class="container">
+    <div class="box">
+        <div class="box-header">GitHub Content Manager</div>
+        <div class="box-body">
+            <div id="step1">
+                <label>GitHub Personal Access Token</label>
+                <input type="password" id="token" placeholder="ghp_xxxxxxxx">
+                <button class="btn btn-primary" onclick="connect()">Cek Akses</button>
+            </div>
+
+            <div id="step2" class="hidden">
+                <div class="guide"><b>Info:</b> Script akan mengekstrak ZIP dan mengunggah tiap file ke branch utama.</div>
+                <label>Pilih Repository</label>
+                <select id="repoList"></select>
+                <label>Pilih File ZIP</label>
+                <input type="file" id="zipInput" accept=".zip">
+                <button class="btn btn-danger" onclick="startDeploy()">Mulai Bersihkan & Deploy</button>
+            </div>
+
+            <div id="log"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let TOKEN = "";
+
+    function writeLog(text, color = "#7ee787") {
+        const logBox = document.getElementById('log');
+        logBox.style.display = "block";
+        logBox.innerHTML += `<div style="color:${color}">> ${text}</div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Fungsi konversi Base64 yang lebih stabil
+    async function getBase64(fileData) {
+        const content = await fileData.async("uint8array");
+        let binary = "";
+        for (let i = 0; i < content.byteLength; i++) {
+            binary += String.fromCharCode(content[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    async function connect() {
+        TOKEN = document.getElementById('token').value;
+        try {
+            const res = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            });
+            if (!res.ok) throw new Error("Token tidak valid!");
+            const repos = await res.json();
+            document.getElementById('repoList').innerHTML = repos.map(r => `<option value="${r.full_name}">${r.full_name}</option>`).join('');
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            writeLog("Koneksi berhasil!");
+        } catch (e) { alert(e.message); }
+    }
+
+    async function startDeploy() {
+        const repo = document.getElementById('repoList').value;
+        const file = document.getElementById('zipInput').files[0];
+        if (!file) return alert("Pilih ZIP-nya dulu, Nexu!");
+
+        writeLog("Mencari branch utama...");
+        let branch = "main";
+        try {
+            const repoInfo = await fetch(`https://api.github.com/repos/${repo}`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            }).then(r => r.json());
+            branch = repoInfo.default_branch || "main";
+            writeLog(`Branch terdeteksi: ${branch}`);
+
+            // 1. Ambil list file lama untuk dihapus
+            const branchData = await fetch(`https://api.github.com/repos/${repo}/branches/${branch}`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            }).then(r => r.json());
+
+            if (branchData.commit) {
+                writeLog("Membersihkan file lama...");
+                const tree = await fetch(`https://api.github.com/repos/${repo}/git/trees/${branchData.commit.sha}?recursive=1`, {
+                    headers: { 'Authorization': `token ${TOKEN}` }
+                }).then(r => r.json());
+
+                if (tree.tree) {
+                    for (const item of tree.tree) {
+                        if (item.type === "blob") {
+                            writeLog(`Hapus: ${item.path}`, "#f85149");
+                            await fetch(`https://api.github.com/repos/${repo}/contents/${item.path}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `token ${TOKEN}` },
+                                body: JSON.stringify({ message: "Nexu Clean", sha: item.sha, branch: branch })
+                            });
+                        }
+                    }
+                }
+            }
+
+            // 2. Upload isi ZIP
+            writeLog("Mengekstrak ZIP...");
+            const zip = await JSZip.loadAsync(file);
+            const files = Object.keys(zip.files).filter(k => !zip.files[k].dir);
+
+            for (const filename of files) {
+                writeLog(`Upload: ${filename}`, "#3fb950");
+                const b64 = await getBase64(zip.files[filename]);
+                
+                const uploadRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filename}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `Nexu Update: ${filename}`,
+                        content: b64,
+                        branch: branch
+                    })
+                });
+                
+                if (!uploadRes.ok) {
+                    const err = await uploadRes.json();
+                    writeLog(`Gagal upload ${filename}: ${err.message}`, "red");
+                }
+            }
+
+            writeLog("🎉 SEMUA SELESAI! Cek repository kamu.");
+            alert("Deploy Berhasil!");
+
+        } catch (e) {
+            writeLog("ERROR: " + e.message, "red");
+            console.error(e);
+        }
+    }
+</script>
+</body>
+</html>
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative; z-index: 2;
         }
         .banner-icon svg { fill: #1b4b82; width: 40px; }
