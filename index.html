@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kevcodex | GitHub Deployer Pro</title>
+    <title>Nexu | GitHub Deployer Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
@@ -19,7 +19,6 @@
             background-color: #ffffff; margin: 0; color: #1f2328;
         }
 
-        /* BANNER REPLICA DARI aiAzUW.jpg */
         .banner {
             background: #1b4b82 linear-gradient(135deg, #1b4b82 0%, #2b6cb0 100%);
             color: white; padding: 50px 20px; text-align: center; position: relative; overflow: hidden;
@@ -79,7 +78,7 @@
         #log {
             background: #0d1117; color: #7ee787; padding: 15px; border-radius: 6px;
             font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px;
-            margin-top: 20px; height: 180px; overflow-y: auto; display: none; border: 1px solid #30363d;
+            margin-top: 20px; height: 220px; overflow-y: auto; display: none; border: 1px solid #30363d;
         }
 
         .hidden { display: none; }
@@ -91,16 +90,16 @@
     <div class="banner-icon">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.165 6.839 9.49.5.09.682-.218.682-.485 0-.24-.009-.875-.013-1.716-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.011 10.011 0 0022 12c0-5.523-4.477-10-10-10z"></path></svg>
     </div>
-    <h1 style="margin:0; font-size: 32px;">GitHub Deployer</h1>
-    <p style="margin:8px 0 0; opacity: 0.8;">Hapus lama, upload baru. Simpel dan cepat.</p>
+    <h1 style="margin:0; font-size: 32px;">GitHub Deployer Pro</h1>
+    <p style="margin:8px 0 0; opacity: 0.8;">Wipe & Rebuild dengan satu commit.</p>
 </div>
 
 <div class="container">
     <div class="box">
-        <div class="box-header">GitHub Deploy Manager</div>
+        <div class="box-header">Nexu Deploy Engine</div>
         <div class="box-body">
             <div class="guide">
-                <b>Nexu Guide:</b> Pastikan Token GitHub memiliki izin <code>repo</code> penuh.
+                <b>Nexu Guide:</b> Pastikan Token memiliki akses <code>repo</code>. Proses ini akan menggantikan seluruh isi branch yang dipilih.
             </div>
 
             <div id="step1">
@@ -136,13 +135,10 @@
         logBox.scrollTop = logBox.scrollHeight;
     }
 
-    // Fungsi konversi Base64 anti-crash untuk file besar
     function uint8ToBase64(uint8) {
         let binary = '';
         let len = uint8.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(uint8[i]);
-        }
+        for (let i = 0; i < len; i++) { binary += String.fromCharCode(uint8[i]); }
         return window.btoa(binary);
     }
 
@@ -159,160 +155,64 @@
             document.getElementById('repoList').innerHTML = repos.map(r => `<option value="${r.full_name}">${r.full_name}</option>`).join('');
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
-            writeLog("Berhasil terhubung ke akun GitHub kamu!", "#3fb950");
+            writeLog("Koneksi berhasil, Nexu!", "#3fb950");
         } catch (e) { alert(e.message); }
     }
 
     async function startDeploy() {
         const repo = document.getElementById('repoList').value;
-        const file = document.getElementById('zipInput').files[0];
-        if(!file) return alert("Pilih file ZIP dulu, Vin!");
+        const fileInput = document.getElementById('zipInput');
+        const file = fileInput.files[0];
         
-        if(!confirm("⚠️ PERINGATAN: Seluruh file lama akan dihapus. Lanjutkan?")) return;
-
-        writeLog("Mengecek konfigurasi repository...");
-        let branchName = "main";
-        let sha = "";
+        if(!file) return alert("Pilih file ZIP dulu!");
+        if(!confirm("⚠️ PERHATIAN: Seluruh file di branch utama akan diganti dengan isi ZIP ini. Lanjutkan?")) return;
 
         try {
-            // Cek branch utama (main/master)
+            document.getElementById('log').innerHTML = ""; 
+            writeLog("Memulai proses deployment...");
+
+            // 1. Cek Branch Utama
+            let branchName = "main";
             let branchRes = await fetch(`https://api.github.com/repos/${repo}/branches/main`, { headers: { 'Authorization': `token ${TOKEN}` }});
             if(!branchRes.ok) {
                 branchRes = await fetch(`https://api.github.com/repos/${repo}/branches/master`, { headers: { 'Authorization': `token ${TOKEN}` }});
                 branchName = "master";
             }
+            
+            const branchData = await branchRes.json();
+            const parentSha = branchData.commit.sha;
+            writeLog(`Menggunakan branch: ${branchName}`, "#d29922");
 
-            if(branchRes.ok) {
-                const branchData = await branchRes.json();
-                sha = branchData.commit.sha;
-                
-                writeLog(`Membersihkan file lama di branch [${branchName}]...`);
-                const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${sha}?recursive=1`, { headers: { 'Authorization': `token ${TOKEN}` }});
-                const treeData = await treeRes.json();
-
-                if(treeData.tree) {
-                    const filesToDelete = treeData.tree.filter(item => item.type === "blob");
-                    for(const item of filesToDelete) {
-                        writeLog("Menghapus: " + item.path, "#f85149");
-                        await fetch(`https://api.github.com/repos/${repo}/contents/${item.path}`, {
-                            method: 'DELETE',
-                            headers: { 'Authorization': `token ${TOKEN}` },
-                            body: JSON.stringify({ message: "Nexu Cleanup", sha: item.sha, branch: branchName })
-                        });
-                    }
-                }
-            } else {
-                writeLog("Repository masih kosong, melewati tahap pembersihan.", "#d29922");
-            }
-
-            writeLog("Mengekstrak file dari ZIP...");
+            // 2. Ekstrak ZIP
+            writeLog("Mengekstrak file ZIP...");
             const zip = await JSZip.loadAsync(file);
             const files = Object.keys(zip.files).filter(k => !zip.files[k].dir);
-
-            for(const filename of files) {
-                writeLog("Mengunggah: " + filename, "#3fb950");
-                const content = await zip.files[filename].async("uint8array");
-                
-                // Gunakan fungsi uint8ToBase64 agar tidak crash
-                const b64 = uint8ToBase64(content);
-                
-                await fetch(`https://api.github.com/repos/${repo}/contents/${filename}`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `token ${TOKEN}` },
-                    body: JSON.stringify({ 
-                        message: "Nexu Deploy Pro", 
-                        content: b64, 
-                        branch: branchName 
-                    })
-                });
-            }
-            writeLog("🎉 DEPLOY BERHASIL! File kamu sudah live.", "#3fb950");
-            alert("Selesai! Cek repository kamu.");
-        } catch (e) {
-            writeLog("Error: " + e.message, "#f85149");
-        }
-    }
-</script>
-</body>
-</html>
-            <b>Penting:</b> Gunakan Token dengan izin <b>'repo'</b>. Jika repo baru, pastikan sudah di-publish (bukan repo kosong tanpa branch).
-        </div>
-        <div id="setup">
-            <label>GitHub Token (PAT)</label>
-            <input type="password" id="token" placeholder="ghp_xxxxxx">
-            <button class="btn btn-primary" onclick="loadRepos()">Hubungkan Akun</button>
-        </div>
-        <div id="main" class="hidden">
-            <label>Pilih Repository</label>
-            <select id="repoList"></select>
-            <label>Pilih ZIP (Isi web kamu)</label>
-            <input type="file" id="zipFile" accept=".zip">
-            <button class="btn btn-danger" onclick="doUltraDeploy()">START DEPLOY (HAPUS & ISI)</button>
-        </div>
-        <div id="log"></div>
-    </div>
-</div>
-
-<script>
-    let TOKEN = "";
-    const log = (m, c = "#7ee787") => { 
-        const l = document.getElementById('log'); 
-        l.style.display = "block"; 
-        l.innerHTML += `<div style="color:${c}">> ${m}</div>`; 
-        l.scrollTop = l.scrollHeight; 
-    };
-
-    async function loadRepos() {
-        TOKEN = document.getElementById('token').value;
-        try {
-            const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', { headers: { 'Authorization': `token ${TOKEN}` }});
-            if(!r.ok) throw new Error("Token salah atau tidak punya izin akses user.");
-            const data = await r.json();
-            document.getElementById('repoList').innerHTML = data.map(repo => `<option value="${repo.full_name}">${repo.full_name}</option>`).join('');
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('main').classList.remove('hidden');
-            log("Terhubung! Silakan pilih repository.");
-        } catch (e) { alert(e.message); }
-    }
-
-    async function doUltraDeploy() {
-        const repo = document.getElementById('repoList').value;
-        const file = document.getElementById('zipFile').files[0];
-        if(!file) return alert("Pilih ZIP!");
-        
-        log("Mengekstrak file ZIP...", "#ffa657");
-        const zip = await JSZip.loadAsync(file);
-        const files = Object.keys(zip.files).filter(k => !zip.files[k].dir);
-        
-        try {
-            const repoRes = await fetch(`https://api.github.com/repos/${repo}`, { headers: { 'Authorization': `token ${TOKEN}` }});
-            const repoInfo = await repoRes.json();
-            const branch = repoInfo.default_branch;
-
-            // 1. Upload semua file sebagai Blobs
+            
             const treeItems = [];
-            for (const path of files) {
-                log(`Proses: ${path}...`);
-                const content = await zip.files[path].async("uint8array");
-                
-                // Konversi aman
-                let binary = "";
-                const len = content.byteLength;
-                for (let i = 0; i < len; i++) binary += String.fromCharCode(content[i]);
+
+            // 3. Upload Blobs (File per file ke GitHub backend)
+            for(const filename of files) {
+                writeLog(`Menyiapkan: ${filename}`);
+                const content = await zip.files[filename].async("uint8array");
+                const b64 = uint8ToBase64(content);
                 
                 const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
                     method: 'POST',
                     headers: { 'Authorization': `token ${TOKEN}` },
-                    body: JSON.stringify({ content: window.btoa(binary), encoding: 'base64' })
+                    body: JSON.stringify({ content: b64, encoding: 'base64' })
                 });
-                
-                if(!blobRes.ok) throw new Error(`Gagal upload file: ${path}. Pastikan token punya izin 'repo'.`);
                 const blobData = await blobRes.json();
-                treeItems.push({ path: path, mode: '100644', type: 'blob', sha: blobData.sha });
+                
+                treeItems.push({
+                    path: filename,
+                    mode: "100644",
+                    type: "blob",
+                    sha: blobData.sha
+                });
             }
 
-            // 2. Buat Tree (Tanpa base_tree agar file lama benar-benar hilang)
-            log("Menyusun struktur data baru...", "#ffa657");
+            // 4. Buat Tree Baru (Tanpa base_tree = WIPE OTOMATIS)
+            writeLog("Membangun struktur file baru...");
             const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
                 method: 'POST',
                 headers: { 'Authorization': `token ${TOKEN}` },
@@ -320,31 +220,32 @@
             });
             const treeData = await treeRes.json();
 
-            // 3. Buat Commit
-            log("Membuat commit baru...");
+            // 5. Buat Commit
+            writeLog("Menciptakan commit tunggal...");
             const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
                 method: 'POST',
                 headers: { 'Authorization': `token ${TOKEN}` },
-                body: JSON.stringify({ message: "Nexu Clean Deploy V3", tree: treeData.sha })
+                body: JSON.stringify({
+                    message: "Nexu Deploy: Clean Rebuild",
+                    tree: treeData.sha,
+                    parents: [parentSha]
+                })
             });
             const commitData = await commitRes.json();
 
-            // 4. Update Reference (Force Push)
-            log("Mengirim perubahan ke GitHub...", "#3fb950");
-            const finalRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+            // 6. Update Ref Branch (Live!)
+            writeLog("Memperbarui branch utama...");
+            await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branchName}`, {
                 method: 'PATCH',
                 headers: { 'Authorization': `token ${TOKEN}` },
                 body: JSON.stringify({ sha: commitData.sha, force: true })
             });
 
-            if(finalRes.ok) {
-                log("🎉 BERHASIL! Repository sudah ter-update sempurna.", "#3fb950");
-                alert("Sukses! Silakan refresh halaman GitHub kamu.");
-            } else {
-                throw new Error("Gagal update referensi branch.");
-            }
-        } catch (e) { 
-            log("ERROR: " + e.message, "#cf222e");
+            writeLog("🎉 DEPLOY BERHASIL! Repositori telah diperbarui.", "#3fb950");
+            alert("Selesai! File kamu sudah live.");
+
+        } catch (e) {
+            writeLog("ERROR: " + e.message, "#f85149");
             console.error(e);
         }
     }
