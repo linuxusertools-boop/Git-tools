@@ -1,87 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexu | GitHub Deployer Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        @page {
-            size: A4;
-            margin: 15mm;
-            background-color: #ffffff;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.5;
-            color: #333;
-            font-size: 10pt;
-        }
-        .header {
-            background-color: #1b4b82;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-        }
-        h1 { margin: 0; font-size: 18pt; }
-        h2 { color: #1b4b82; border-bottom: 2px solid #1b4b82; padding-bottom: 5px; margin-top: 20px; font-size: 14pt; }
-        .code-block {
-            background-color: #f4f4f4;
-            border: 1px solid #ddd;
-            border-left: 4px solid #1b4b82;
-            padding: 10px;
-            font-family: 'Courier New', Courier, monospace;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 9pt;
-            margin: 10px 0;
-        }
-        .note {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th { background-color: #f8f9fa; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Nexu GitHub Deployer Pro - Source Code</h1>
-        <p>Deployment Engine v2.0 - Full Fix & Stable</p>
-    </div>
-
-    <h2>1. Deskripsi Sistem</h2>
-    <p>Dokumen ini berisi kode sumber lengkap untuk aplikasi web <strong>Nexu GitHub Deployer Pro</strong>. Aplikasi ini dirancang untuk melakukan proses "Wipe & Rebuild" pada repositori GitHub menggunakan file ZIP secara efisien dan aman.</p>
-
-    <h2>2. Fitur Utama (Full Fix)</h2>
-    <ul>
-        <li><strong>Auto Branch Detection:</strong> Mendeteksi branch utama (main/master) secara otomatis dari API GitHub.</li>
-        <li><strong>Smart Path Stripping:</strong> Jika semua file di dalam ZIP berada di dalam folder (misal <code>tes/file.js</code>), sistem akan otomatis mengeluarkan file tersebut ke root repository.</li>
-        <li><strong>Binary Stable:</strong> Menggunakan <code>ArrayBuffer</code> dan <code>FileReader</code> untuk menangani file biner (gambar/PDF) tanpa resiko <i>corrupted zip</i>.</li>
-        <li><strong>Error Handling:</strong> Validasi ketat pada setiap tahapan API GitHub (Blobs, Trees, Commits, Refs).</li>
-    </ul>
-
-    <h2>3. Kode Sumber Lengkap (HTML & JavaScript)</h2>
-    <div class="code-block">
-&lt;!DOCTYPE html&gt;
-&lt;html lang="id"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;Nexu | GitHub Deployer Pro&lt;/title&gt;
-    &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"&gt;&lt;/script&gt;
-    &lt;style&gt;
         :root {
             --gh-blue: #0969da;
             --gh-bg: #f6f8fa;
@@ -112,32 +36,32 @@
         .btn-danger { color: var(--gh-danger); background: var(--gh-bg); margin-top: 10px; border: 1px solid var(--gh-border); }
         #log { background: #0d1117; color: #7ee787; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-top: 20px; height: 250px; overflow-y: auto; display: none; border: 1px solid #30363d; }
         .hidden { display: none; }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div class="banner"&gt;
-        &lt;h1&gt;GitHub Deployer Pro&lt;/h1&gt;
-        &lt;p&gt;Nexu Stable Engine v2.0&lt;/p&gt;
-    &lt;/div&gt;
-    &lt;div class="container"&gt;
-        &lt;div class="box"&gt;
-            &lt;div class="box-header"&gt;Console Management&lt;/div&gt;
-            &lt;div class="box-body"&gt;
-                &lt;div id="step1"&gt;
-                    &lt;label&gt;Token GitHub (repo access)&lt;/label&gt;
-                    &lt;input type="password" id="token" placeholder="ghp_..."&gt;
-                    &lt;button class="btn btn-primary" onclick="connect()"&gt;Connect&lt;/button&gt;
-                &lt;/div&gt;
-                &lt;div id="step2" class="hidden"&gt;
-                    &lt;div class="form-group"&gt;&lt;label&gt;Repository&lt;/label&gt;&lt;select id="repoList"&gt;&lt;/select&gt;&lt;/div&gt;
-                    &lt;div class="form-group"&gt;&lt;label&gt;File ZIP&lt;/label&gt;&lt;input type="file" id="zipInput" accept=".zip"&gt;&lt;/div&gt;
-                    &lt;button class="btn btn-danger" id="deployBtn" onclick="startDeploy()"&gt;Deploy Now&lt;/button&gt;
-                &lt;/div&gt;
-                &lt;div id="log"&gt;&lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-    &lt;script&gt;
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <h1>GitHub Deployer Pro</h1>
+        <p>Nexu Stable Engine v2.0</p>
+    </div>
+    <div class="container">
+        <div class="box">
+            <div class="box-header">Console Management</div>
+            <div class="box-body">
+                <div id="step1">
+                    <label>Token GitHub (repo access)</label>
+                    <input type="password" id="token" placeholder="ghp_...">
+                    <button class="btn btn-primary" onclick="connect()">Connect</button>
+                </div>
+                <div id="step2" class="hidden">
+                    <div class="form-group"><label>Repository</label><select id="repoList"></select></div>
+                    <div class="form-group"><label>File ZIP</label><input type="file" id="zipInput" accept=".zip"></div>
+                    <button class="btn btn-danger" id="deployBtn" onclick="startDeploy()">Deploy Now</button>
+                </div>
+                <div id="log"></div>
+            </div>
+        </div>
+    </div>
+    <script>
         let TOKEN = "";
         function writeLog(text, color = "#7ee787") {
             const l = document.getElementById('log'); l.style.display = "block";
@@ -157,7 +81,7 @@
                 const res = await fetch('https://api.github.com/user/repos?per_page=100', { headers: {'Authorization': `token ${TOKEN}`} });
                 if(!res.ok) throw new Error("Token Invalid");
                 const d = await res.json();
-                document.getElementById('repoList').innerHTML = d.map(r => `&lt;option value="${r.full_name}"&gt;${r.full_name}&lt;/option&gt;`).join('');
+                document.getElementById('repoList').innerHTML = d.map(r => `<option value="${r.full_name}">${r.full_name}</option>`).join('');
                 document.getElementById('step1').classList.add('hidden');
                 document.getElementById('step2').classList.remove('hidden');
                 writeLog("Connected!");
@@ -225,9 +149,7 @@
             } catch(e) { writeLog("ERROR: " + e.message, "#f85149"); }
             finally { btn.disabled = false; }
         }
-    &lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-    </div>
+    </script>
 </body>
 </html>
+    
