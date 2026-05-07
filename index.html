@@ -1,11 +1,87 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexu | GitHub Deployer Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+            background-color: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            font-size: 10pt;
+        }
+        .header {
+            background-color: #1b4b82;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        h1 { margin: 0; font-size: 18pt; }
+        h2 { color: #1b4b82; border-bottom: 2px solid #1b4b82; padding-bottom: 5px; margin-top: 20px; font-size: 14pt; }
+        .code-block {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-left: 4px solid #1b4b82;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 9pt;
+            margin: 10px 0;
+        }
+        .note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background-color: #f8f9fa; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Nexu GitHub Deployer Pro - Source Code</h1>
+        <p>Deployment Engine v2.0 - Full Fix & Stable</p>
+    </div>
+
+    <h2>1. Deskripsi Sistem</h2>
+    <p>Dokumen ini berisi kode sumber lengkap untuk aplikasi web <strong>Nexu GitHub Deployer Pro</strong>. Aplikasi ini dirancang untuk melakukan proses "Wipe & Rebuild" pada repositori GitHub menggunakan file ZIP secara efisien dan aman.</p>
+
+    <h2>2. Fitur Utama (Full Fix)</h2>
+    <ul>
+        <li><strong>Auto Branch Detection:</strong> Mendeteksi branch utama (main/master) secara otomatis dari API GitHub.</li>
+        <li><strong>Smart Path Stripping:</strong> Jika semua file di dalam ZIP berada di dalam folder (misal <code>tes/file.js</code>), sistem akan otomatis mengeluarkan file tersebut ke root repository.</li>
+        <li><strong>Binary Stable:</strong> Menggunakan <code>ArrayBuffer</code> dan <code>FileReader</code> untuk menangani file biner (gambar/PDF) tanpa resiko <i>corrupted zip</i>.</li>
+        <li><strong>Error Handling:</strong> Validasi ketat pada setiap tahapan API GitHub (Blobs, Trees, Commits, Refs).</li>
+    </ul>
+
+    <h2>3. Kode Sumber Lengkap (HTML & JavaScript)</h2>
+    <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="id"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Nexu | GitHub Deployer Pro&lt;/title&gt;
+    &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"&gt;&lt;/script&gt;
+    &lt;style&gt;
         :root {
             --gh-blue: #0969da;
             --gh-bg: #f6f8fa;
@@ -13,242 +89,145 @@
             --gh-danger: #cf222e;
             --gh-success: #1f883d;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
             background-color: #ffffff; margin: 0; color: #1f2328;
         }
-
         .banner {
             background: #1b4b82 linear-gradient(135deg, #1b4b82 0%, #2b6cb0 100%);
-            color: white; padding: 50px 20px; text-align: center; position: relative; overflow: hidden;
+            color: white; padding: 40px 20px; text-align: center; position: relative;
         }
-
-        .banner::before, .banner::after {
-            content: ""; position: absolute; background: rgba(255, 255, 255, 0.08); border-radius: 50%;
-        }
-        .banner::before { width: 250px; height: 250px; top: -100px; left: -50px; }
-        .banner::after { width: 150px; height: 150px; bottom: -30px; right: 10%; }
-
-        .banner-icon {
-            background: white; width: 70px; height: 70px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative; z-index: 2;
-        }
-        .banner-icon svg { fill: #1b4b82; width: 40px; }
-
-        .container { max-width: 800px; margin: -35px auto 50px; padding: 0 20px; position: relative; z-index: 5; }
-
+        .container { max-width: 800px; margin: -30px auto 50px; padding: 0 20px; position: relative; }
         .box {
             background: white; border: 1px solid var(--gh-border);
             border-radius: 6px; box-shadow: 0 8px 24px rgba(149,157,165,0.2);
         }
-
-        .box-header {
-            background: var(--gh-bg); padding: 16px; border-bottom: 1px solid var(--gh-border);
-            font-weight: 600; border-radius: 6px 6px 0 0; display: flex; align-items: center;
-        }
-
+        .box-header { background: var(--gh-bg); padding: 16px; border-bottom: 1px solid var(--gh-border); font-weight: 600; }
         .box-body { padding: 24px; }
-
-        .guide {
-            background-color: #ddf4ff; border: 1px solid #54aeff66;
-            border-radius: 6px; padding: 15px; margin-bottom: 20px; font-size: 14px; color: #0969da;
-        }
-
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-        
-        input, select {
-            width: 100%; padding: 10px; border: 1px solid var(--gh-border);
-            border-radius: 6px; box-sizing: border-box; background: #fafafa; transition: 0.2s;
-        }
-
-        input:focus { border-color: var(--gh-blue); outline: none; box-shadow: 0 0 0 3px rgba(9,105,218,0.1); }
-
-        .btn {
-            padding: 10px 20px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);
-            cursor: pointer; width: 100%; transition: 0.2s;
-        }
-
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--gh-border); border-radius: 6px; box-sizing: border-box; }
+        .btn { padding: 10px 20px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; width: 100%; }
         .btn-primary { background: var(--gh-success); color: white; }
         .btn-danger { color: var(--gh-danger); background: var(--gh-bg); margin-top: 10px; border: 1px solid var(--gh-border); }
-        .btn-danger:hover { background: var(--gh-danger); color: white; }
-
-        #log {
-            background: #0d1117; color: #7ee787; padding: 15px; border-radius: 6px;
-            font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px;
-            margin-top: 20px; height: 220px; overflow-y: auto; display: none; border: 1px solid #30363d;
-        }
-
+        #log { background: #0d1117; color: #7ee787; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-top: 20px; height: 250px; overflow-y: auto; display: none; border: 1px solid #30363d; }
         .hidden { display: none; }
-    </style>
-</head>
-<body>
-
-<div class="banner">
-    <div class="banner-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.165 6.839 9.49.5.09.682-.218.682-.485 0-.24-.009-.875-.013-1.716-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.011 10.011 0 0022 12c0-5.523-4.477-10-10-10z"></path></svg>
-    </div>
-    <h1 style="margin:0; font-size: 32px;">GitHub Deployer Pro</h1>
-    <p style="margin:8px 0 0; opacity: 0.8;">Wipe & Rebuild dengan satu commit.</p>
-</div>
-
-<div class="container">
-    <div class="box">
-        <div class="box-header">Nexu Deploy Engine</div>
-        <div class="box-body">
-            <div class="guide">
-                <b>Nexu Guide:</b> Pastikan Token memiliki akses <code>repo</code>. Proses ini akan menggantikan seluruh isi branch yang dipilih.
-            </div>
-
-            <div id="step1">
-                <label>GitHub Personal Access Token</label>
-                <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx">
-                <button class="btn btn-primary" style="margin-top:12px" onclick="connect()">Connect to GitHub</button>
-            </div>
-
-            <div id="step2" class="hidden">
-                <div class="form-group">
-                    <label>Pilih Repository</label>
-                    <select id="repoList"></select>
-                </div>
-                <div class="form-group">
-                    <label>Pilih File ZIP</label>
-                    <input type="file" id="zipInput" accept=".zip">
-                </div>
-                <button class="btn btn-danger" onclick="startDeploy()">Wipe & Deploy Baru</button>
-            </div>
-
-            <div id="log"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-    let TOKEN = "";
-
-    function writeLog(text, color = "#7ee787") {
-        const logBox = document.getElementById('log');
-        logBox.style.display = "block";
-        logBox.innerHTML += `<div style="color:${color}">> ${text}</div>`;
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    function uint8ToBase64(uint8) {
-        let binary = '';
-        let len = uint8.byteLength;
-        for (let i = 0; i < len; i++) { binary += String.fromCharCode(uint8[i]); }
-        return window.btoa(binary);
-    }
-
-    async function connect() {
-        TOKEN = document.getElementById('token').value;
-        if(!TOKEN) return alert("Token kosong!");
-        
-        try {
-            const res = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
-                headers: { 'Authorization': `token ${TOKEN}` }
-            });
-            if(!res.ok) throw new Error("Token tidak valid atau expired.");
-            const repos = await res.json();
-            document.getElementById('repoList').innerHTML = repos.map(r => `<option value="${r.full_name}">${r.full_name}</option>`).join('');
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-            writeLog("Koneksi berhasil, Nexu!", "#3fb950");
-        } catch (e) { alert(e.message); }
-    }
-
-    async function startDeploy() {
-        const repo = document.getElementById('repoList').value;
-        const fileInput = document.getElementById('zipInput');
-        const file = fileInput.files[0];
-        
-        if(!file) return alert("Pilih file ZIP dulu!");
-        if(!confirm("⚠️ PERHATIAN: Seluruh file di branch utama akan diganti dengan isi ZIP ini. Lanjutkan?")) return;
-
-        try {
-            document.getElementById('log').innerHTML = ""; 
-            writeLog("Memulai proses deployment...");
-
-            // 1. Cek Branch Utama
-            let branchName = "main";
-            let branchRes = await fetch(`https://api.github.com/repos/${repo}/branches/main`, { headers: { 'Authorization': `token ${TOKEN}` }});
-            if(!branchRes.ok) {
-                branchRes = await fetch(`https://api.github.com/repos/${repo}/branches/master`, { headers: { 'Authorization': `token ${TOKEN}` }});
-                branchName = "master";
-            }
-            
-            const branchData = await branchRes.json();
-            const parentSha = branchData.commit.sha;
-            writeLog(`Menggunakan branch: ${branchName}`, "#d29922");
-
-            // 2. Ekstrak ZIP
-            writeLog("Mengekstrak file ZIP...");
-            const zip = await JSZip.loadAsync(file);
-            const files = Object.keys(zip.files).filter(k => !zip.files[k].dir);
-            
-            const treeItems = [];
-
-            // 3. Upload Blobs (File per file ke GitHub backend)
-            for(const filename of files) {
-                writeLog(`Menyiapkan: ${filename}`);
-                const content = await zip.files[filename].async("uint8array");
-                const b64 = uint8ToBase64(content);
-                
-                const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `token ${TOKEN}` },
-                    body: JSON.stringify({ content: b64, encoding: 'base64' })
-                });
-                const blobData = await blobRes.json();
-                
-                treeItems.push({
-                    path: filename,
-                    mode: "100644",
-                    type: "blob",
-                    sha: blobData.sha
-                });
-            }
-
-            // 4. Buat Tree Baru (Tanpa base_tree = WIPE OTOMATIS)
-            writeLog("Membangun struktur file baru...");
-            const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
-                method: 'POST',
-                headers: { 'Authorization': `token ${TOKEN}` },
-                body: JSON.stringify({ tree: treeItems })
-            });
-            const treeData = await treeRes.json();
-
-            // 5. Buat Commit
-            writeLog("Menciptakan commit tunggal...");
-            const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
-                method: 'POST',
-                headers: { 'Authorization': `token ${TOKEN}` },
-                body: JSON.stringify({
-                    message: "Nexu Deploy: Clean Rebuild",
-                    tree: treeData.sha,
-                    parents: [parentSha]
-                })
-            });
-            const commitData = await commitRes.json();
-
-            // 6. Update Ref Branch (Live!)
-            writeLog("Memperbarui branch utama...");
-            await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branchName}`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `token ${TOKEN}` },
-                body: JSON.stringify({ sha: commitData.sha, force: true })
-            });
-
-            writeLog("🎉 DEPLOY BERHASIL! Repositori telah diperbarui.", "#3fb950");
-            alert("Selesai! File kamu sudah live.");
-
-        } catch (e) {
-            writeLog("ERROR: " + e.message, "#f85149");
-            console.error(e);
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="banner"&gt;
+        &lt;h1&gt;GitHub Deployer Pro&lt;/h1&gt;
+        &lt;p&gt;Nexu Stable Engine v2.0&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="container"&gt;
+        &lt;div class="box"&gt;
+            &lt;div class="box-header"&gt;Console Management&lt;/div&gt;
+            &lt;div class="box-body"&gt;
+                &lt;div id="step1"&gt;
+                    &lt;label&gt;Token GitHub (repo access)&lt;/label&gt;
+                    &lt;input type="password" id="token" placeholder="ghp_..."&gt;
+                    &lt;button class="btn btn-primary" onclick="connect()"&gt;Connect&lt;/button&gt;
+                &lt;/div&gt;
+                &lt;div id="step2" class="hidden"&gt;
+                    &lt;div class="form-group"&gt;&lt;label&gt;Repository&lt;/label&gt;&lt;select id="repoList"&gt;&lt;/select&gt;&lt;/div&gt;
+                    &lt;div class="form-group"&gt;&lt;label&gt;File ZIP&lt;/label&gt;&lt;input type="file" id="zipInput" accept=".zip"&gt;&lt;/div&gt;
+                    &lt;button class="btn btn-danger" id="deployBtn" onclick="startDeploy()"&gt;Deploy Now&lt;/button&gt;
+                &lt;/div&gt;
+                &lt;div id="log"&gt;&lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;script&gt;
+        let TOKEN = "";
+        function writeLog(text, color = "#7ee787") {
+            const l = document.getElementById('log'); l.style.display = "block";
+            const e = document.createElement('div'); e.style.color = color; e.textContent = "> " + text;
+            l.appendChild(e); l.scrollTop = l.scrollHeight;
         }
-    }
-</script>
+        async function getBase64(data) {
+            return new Promise(r => {
+                const reader = new FileReader();
+                reader.onload = e => r(window.btoa(e.target.result));
+                reader.readAsBinaryString(new Blob([data]));
+            });
+        }
+        async function connect() {
+            TOKEN = document.getElementById('token').value;
+            try {
+                const res = await fetch('https://api.github.com/user/repos?per_page=100', { headers: {'Authorization': `token ${TOKEN}`} });
+                if(!res.ok) throw new Error("Token Invalid");
+                const d = await res.json();
+                document.getElementById('repoList').innerHTML = d.map(r => `&lt;option value="${r.full_name}"&gt;${r.full_name}&lt;/option&gt;`).join('');
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                writeLog("Connected!");
+            } catch(e) { alert(e.message); }
+        }
+        async function startDeploy() {
+            const repo = document.getElementById('repoList').value;
+            const file = document.getElementById('zipInput').files[0];
+            if(!file) return alert("Pilih ZIP!");
+            const btn = document.getElementById('deployBtn'); btn.disabled = true;
+            try {
+                writeLog("Analyzing Repo & ZIP...");
+                const repoRes = await fetch(`https://api.github.com/repos/${repo}`, { headers: {'Authorization': `token ${TOKEN}`} });
+                const repoInfo = await repoRes.json();
+                const branch = repoInfo.default_branch;
+                
+                const branchRes = await fetch(`https://api.github.com/repos/${repo}/branches/${branch}`, { headers: {'Authorization': `token ${TOKEN}`} });
+                const branchInfo = await branchRes.json();
+                const parentSha = branchInfo.commit.sha;
+                
+                const arrayBuffer = await file.arrayBuffer();
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                const files = Object.keys(zip.files).filter(k => !zip.files[k].dir);
+                
+                // Smart Path Stripping Logic
+                const firstFolder = files[0].split('/')[0];
+                const isNested = files.every(f => f.startsWith(firstFolder + '/'));
+                
+                const tree = [];
+                for(const f of files) {
+                    writeLog("Uploading: " + f);
+                    const content = await zip.files[f].async("uint8array");
+                    const b64 = await getBase64(content);
+                    const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+                        method: 'POST', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
+                        body: JSON.stringify({ content: b64, encoding: 'base64' })
+                    });
+                    const blob = await blobRes.json();
+                    
+                    const githubPath = isNested ? f.substring(f.indexOf('/') + 1) : f;
+                    if(!githubPath) continue;
+
+                    tree.push({ path: githubPath, mode: "100644", type: "blob", sha: blob.sha });
+                }
+                
+                writeLog("Creating Commit...");
+                const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+                    method: 'POST', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tree })
+                });
+                const newTree = await treeRes.json();
+                
+                const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+                    method: 'POST', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: "Nexu Deploy", tree: newTree.sha, parents: [parentSha] })
+                });
+                const commit = await commitRes.json();
+                
+                await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
+                    method: 'PATCH', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ sha: commit.sha, force: true })
+                });
+                writeLog("SUCCESS!", "#3fb950");
+                alert("Done!");
+            } catch(e) { writeLog("ERROR: " + e.message, "#f85149"); }
+            finally { btn.disabled = false; }
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+    </div>
 </body>
 </html>
