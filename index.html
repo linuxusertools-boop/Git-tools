@@ -3,153 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexu | GitHub Deployer Pro</title>
+    <title>kev-git | GitHub Deployer</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        :root {
-            --gh-blue: #0969da;
-            --gh-bg: #f6f8fa;
-            --gh-border: #d0d7de;
-            --gh-danger: #cf222e;
-            --gh-success: #1f883d;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: #ffffff; margin: 0; color: #1f2328;
-        }
-        .banner {
-            background: #1b4b82 linear-gradient(135deg, #1b4b82 0%, #2b6cb0 100%);
-            color: white; padding: 40px 20px; text-align: center; position: relative;
-        }
-        .container { max-width: 800px; margin: -30px auto 50px; padding: 0 20px; position: relative; }
-        .box {
-            background: white; border: 1px solid var(--gh-border);
-            border-radius: 6px; box-shadow: 0 8px 24px rgba(149,157,165,0.2);
-        }
-        .box-header { background: var(--gh-bg); padding: 16px; border-bottom: 1px solid var(--gh-border); font-weight: 600; }
-        .box-body { padding: 24px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--gh-border); border-radius: 6px; box-sizing: border-box; }
-        .btn { padding: 10px 20px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; width: 100%; }
-        .btn-primary { background: var(--gh-success); color: white; }
-        .btn-danger { color: var(--gh-danger); background: var(--gh-bg); margin-top: 10px; border: 1px solid var(--gh-border); }
-        #log { background: #0d1117; color: #7ee787; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-top: 20px; height: 250px; overflow-y: auto; display: none; border: 1px solid #30363d; }
-        .hidden { display: none; }
-    </style>
 </head>
 <body>
-    <div class="banner">
-        <h1>GitHub Deployer Pro</h1>
-        <p>Nexu Stable Engine v2.0</p>
-    </div>
-    <div class="container">
-        <div class="box">
-            <div class="box-header">Console Management</div>
-            <div class="box-body">
-                <div id="step1">
-                    <label>Token GitHub (repo access)</label>
-                    <input type="password" id="token" placeholder="ghp_...">
-                    <button class="btn btn-primary" onclick="connect()">Connect</button>
-                </div>
-                <div id="step2" class="hidden">
-                    <div class="form-group"><label>Repository</label><select id="repoList"></select></div>
-                    <div class="form-group"><label>File ZIP</label><input type="file" id="zipInput" accept=".zip"></div>
-                    <button class="btn btn-danger" id="deployBtn" onclick="startDeploy()">Deploy Now</button>
-                </div>
-                <div id="log"></div>
-            </div>
-        </div>
-    </div>
-    <script>
-        let TOKEN = "";
-        function writeLog(text, color = "#7ee787") {
-            const l = document.getElementById('log'); l.style.display = "block";
-            const e = document.createElement('div'); e.style.color = color; e.textContent = "> " + text;
-            l.appendChild(e); l.scrollTop = l.scrollHeight;
-        }
-        async function getBase64(data) {
-            return new Promise(r => {
-                const reader = new FileReader();
-                reader.onload = e => r(window.btoa(e.target.result));
-                reader.readAsBinaryString(new Blob([data]));
-            });
-        }
-        async function connect() {
-            TOKEN = document.getElementById('token').value;
-            try {
-                const res = await fetch('https://api.github.com/user/repos?per_page=100', { headers: {'Authorization': `token ${TOKEN}`} });
-                if(!res.ok) throw new Error("Token Invalid");
-                const d = await res.json();
-                document.getElementById('repoList').innerHTML = d.map(r => `<option value="${r.full_name}">${r.full_name}</option>`).join('');
-                document.getElementById('step1').classList.add('hidden');
-                document.getElementById('step2').classList.remove('hidden');
-                writeLog("Connected!");
-            } catch(e) { alert(e.message); }
-        }
-        async function startDeploy() {
-            const repo = document.getElementById('repoList').value;
-            const file = document.getElementById('zipInput').files[0];
-            if(!file) return alert("Pilih ZIP!");
-            const btn = document.getElementById('deployBtn'); btn.disabled = true;
-            try {
-                writeLog("Analyzing Repo & ZIP...");
-                const repoRes = await fetch(`https://api.github.com/repos/${repo}`, { headers: {'Authorization': `token ${TOKEN}`} });
-                const repoInfo = await repoRes.json();
-                const branch = repoInfo.default_branch;
-                
-                const branchRes = await fetch(`https://api.github.com/repos/${repo}/branches/${branch}`, { headers: {'Authorization': `token ${TOKEN}`} });
-                const branchInfo = await branchRes.json();
-                const parentSha = branchInfo.commit.sha;
-                
-                const arrayBuffer = await file.arrayBuffer();
-                const zip = await JSZip.loadAsync(arrayBuffer);
-                const files = Object.keys(zip.files).filter(k => !zip.files[k].dir);
-                
-                // Smart Path Stripping Logic
-                const firstFolder = files[0].split('/')[0];
-                const isNested = files.every(f => f.startsWith(firstFolder + '/'));
-                
-                const tree = [];
-                for(const f of files) {
-                    writeLog("Uploading: " + f);
-                    const content = await zip.files[f].async("uint8array");
-                    const b64 = await getBase64(content);
-                    const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
-                        method: 'POST', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
-                        body: JSON.stringify({ content: b64, encoding: 'base64' })
-                    });
-                    const blob = await blobRes.json();
-                    
-                    const githubPath = isNested ? f.substring(f.indexOf('/') + 1) : f;
-                    if(!githubPath) continue;
 
-                    tree.push({ path: githubPath, mode: "100644", type: "blob", sha: blob.sha });
-                }
-                
-                writeLog("Creating Commit...");
-                const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
-                    method: 'POST', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ tree })
-                });
-                const newTree = await treeRes.json();
-                
-                const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
-                    method: 'POST', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: "Nexu Deploy", tree: newTree.sha, parents: [parentSha] })
-                });
-                const commit = await commitRes.json();
-                
-                await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/${branch}`, {
-                    method: 'PATCH', headers: {'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ sha: commit.sha, force: true })
-                });
-                writeLog("SUCCESS!", "#3fb950");
-                alert("Done!");
-            } catch(e) { writeLog("ERROR: " + e.message, "#f85149"); }
-            finally { btn.disabled = false; }
-        }
-    </script>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <svg height="20" viewBox="0 0 16 16" width="20">
+                    <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82A7.41 7.41 0 0 0 8 4c-.68.005-1.35.093-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+                </svg>
+                <h1>kev-git</h1>
+            </div>
+            <a href="https://kevsoft-id.developer.li" target="_blank" class="nav-link">Website ➔</a>
+        </header>
+
+        <main>
+            <div id="step1">
+                <div class="form-group">
+                    <label>GitHub Personal Token</label>
+                    <input type="password" id="token" placeholder="ghp_...">
+                </div>
+                <button class="btn" onclick="connect()">Connect Engine</button>
+            </div>
+            
+            <div id="step2" class="hidden">
+                <div class="form-group">
+                    <label>Target Repository</label>
+                    <select id="repoList"></select>
+                </div>
+                <div class="form-group">
+                    <label>Source Bundle (ZIP)</label>
+                    <input type="file" id="zipInput" accept=".zip">
+                </div>
+                <button class="btn" id="deployBtn" onclick="startDeploy()">Production Deploy</button>
+            </div>
+            
+            <div id="log"></div>
+
+            <div class="section-title">
+                <span>Latest Used</span>
+                <span class="clear-btn" onclick="clearHistory()">clear</span>
+            </div>
+            <div id="historyContainer">
+                <div class="history-empty">No deployments logged.</div>
+            </div>
+        </main>
+
+        <footer>
+            powered by <a href="https://github.com/kevsoft-id" target="_blank">@kevsoft-id</a>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
-    
